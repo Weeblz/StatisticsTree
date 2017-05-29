@@ -1,3 +1,5 @@
 ﻿  main.cpp
+d:\important projects\statisticstree\[algo 2] statistics tree\[algo 2] statistics tree\main.cpp(377): warning C4101: 'tempRating': unreferenced local variable
+d:\important projects\statisticstree\[algo 2] statistics tree\[algo 2] statistics tree\main.cpp(371): warning C4101: 'nameOriented': unreferenced local variable
   [Algo 2] Statistics Tree.vcxproj -> D:\Important Projects\StatisticsTree\[Algo 2] Statistics Tree\Debug\[Algo 2] Statistics Tree.exe
   [Algo 2] Statistics Tree.vcxproj -> D:\Important Projects\StatisticsTree\[Algo 2] Statistics Tree\Debug\[Algo 2] Statistics Tree.pdb (Partial PDB)

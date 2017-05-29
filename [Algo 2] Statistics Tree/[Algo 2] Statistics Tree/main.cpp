@@ -48,10 +48,12 @@ public:
 		right = nullptr;
 		parent = nullptr;
 		value = 0;
+		size = 1;
 	}
 
 	Node(int v) {
 		value = v;
+		size = 1;
 	}
 
 	bool color;
@@ -70,8 +72,11 @@ public:
 
 	RBTree()
 		:nil(new Node), root(nil) {
-		nil->left = 0; nil->parent = 0; nil->right = 0; nil->color = BLACK;
+		nil->left = 0; nil->parent = 0; nil->right = 0; nil->color = BLACK, nil->size = 0;
 	}
+
+	Node* getRoot() { return root; }
+	Node* getNil() { return nil; }
 
 	void deleteFixup(Node *x);
 	Node* treeSuccessor(Node* x);
@@ -84,6 +89,14 @@ public:
 	void erase(int key);
 	void updateSizes(Node* current);
 };
+
+void nodeCheck(Node* root, RBTree* t) {
+	if (root != t->getNil()) {
+		std::cout << root->value << " " << root->size << std::endl;
+		nodeCheck(root->left, t);
+		nodeCheck(root->right, t);
+	}
+}
 
 void RBTree::rotateLeft(Node* pivot) {
 	Node* y = pivot->right;
@@ -100,6 +113,10 @@ void RBTree::rotateLeft(Node* pivot) {
 	y->left->parent = pivot;
 	y->left = pivot;
 	pivot->parent = y;
+
+	/*y->size = pivot->size;
+	int l = pivot->left->size, r = pivot->right->size;
+	pivot->size = l + r + 1;*/
 }
 
 void RBTree::rotateRight(Node* pivot) {
@@ -117,6 +134,10 @@ void RBTree::rotateRight(Node* pivot) {
 	y->right->parent = pivot;
 	y->right = pivot;
 	pivot->parent = y;
+
+	/*y->size = pivot->size;
+	int l = pivot->left->size, r = pivot->right->size;
+	pivot->size = l + r + 1;*/
 }
 
 void RBTree::fix(Node* pivot) {
@@ -166,6 +187,7 @@ void RBTree::insert(int key) {
 	Node* x = root;
 	Node* y = nil;
 	while (x != nil) {
+		y->size++;
 		y = x;
 		if (key < x->value)
 			x = x->left;
@@ -185,7 +207,6 @@ void RBTree::insert(int key) {
 	t->right = nil;
 	t->color = RED;
 	fix(t);
-	updateSizes(root);
 }
 
 Node* RBTree::treeSuccessor(Node* x) {
@@ -286,7 +307,6 @@ void RBTree::remove(Node* element) {
 	if (y->color == BLACK)
 		deleteFixup(x);
 	delete y;
-	updateSizes(root);
 }
 
 Node* RBTree::search(int key) {
@@ -307,7 +327,7 @@ void RBTree::erase(int key) {
 	}
 }
 
-void updateSizes(Node* current) {
+void RBTree::updateSizes(Node* current) {
 	if (!current->left && !current->right) {
 		current->size = 1;
 		return;
@@ -347,14 +367,26 @@ int OS_Rank(Node *root, Node *x) {
 }
 
 int main() {
-	RBTree gradeOriented;
-	RBTree nameOriented;
+	RBTree* gradeOriented = new RBTree();
+	RBTree* nameOriented;
 	std::vector<group*> Groups(10);
 	std::vector<student*> Students(100);
 
 	std::ifstream in("base.txt");
 	std::string temp, tempCountry, tempCity, tempSpec, tempR;
 	double tempRating;
+
+	gradeOriented->insert(5);
+	gradeOriented->insert(43);
+	gradeOriented->insert(30);
+	gradeOriented->insert(19);
+	gradeOriented->insert(6);
+	gradeOriented->insert(1);
+	gradeOriented->insert(53);
+
+	nodeCheck(gradeOriented->getRoot(), gradeOriented);
+
+	std::cout << OS_Select(gradeOriented->getRoot(), 4)->value << std::endl;
 
 	system("pause");
 	return 0;
