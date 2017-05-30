@@ -35,7 +35,7 @@ public:
 	}
 
 	void show() const {
-		std::cout << "Student Name: " << name << "\nStudent Country: " << homeCountry << "\nStudent City: " << homeCity << std::endl;
+		std::cout << "Student Name: " << name << "\nStudent Country: " << homeCountry << "\nStudent City: " << homeCity << "\nStudent grade: " << rating << std::endl;
 	}
 };
 
@@ -47,11 +47,11 @@ public:
 		left = nullptr;
 		right = nullptr;
 		parent = nullptr;
-		value = 0;
-		size = 1;
+		value = nullptr;
+		size = 0;
 	}
 
-	Node(int v) {
+	Node(student* v) {
 		value = v;
 		size = 1;
 	}
@@ -60,34 +60,36 @@ public:
 	Node* left;
 	Node* right;
 	Node* parent;
-	int value;
+	student* value;
 	int size;
 };
 
 class RBTree {
 	Node* nil;
 	Node* root;
+	bool mode; //0 - grades, 1 - name
+	int nodes;
 
 public:
 
-	RBTree()
-		:nil(new Node), root(nil) {
+	RBTree(bool mode)
+		: nodes(0), mode(mode),nil(new Node), root(nil) {
 		nil->left = 0; nil->parent = 0; nil->right = 0; nil->color = BLACK, nil->size = 0;
 	}
 
 	Node* getRoot() { return root; }
 	Node* getNil() { return nil; }
+	int getNodes() { return nodes; }
 
 	void deleteFixup(Node *x);
 	Node* treeSuccessor(Node* x);
 	void remove(Node* element);
 	void fix(Node* pivot);
-	void insert(int value);
+	void insert(student* x);
 	void rotateLeft(Node* pivot);
 	void rotateRight(Node* pivot);
-	Node* search(int key);
-	void erase(int key);
-	void updateSizes(Node* current);
+	Node* search(std::string key);
+	void erase(std::string key);
 };
 
 void nodeCheck(Node* root, RBTree* t) {
@@ -114,9 +116,9 @@ void RBTree::rotateLeft(Node* pivot) {
 	y->left = pivot;
 	pivot->parent = y;
 
-	/*y->size = pivot->size;
+	y->size = pivot->size;
 	int l = pivot->left->size, r = pivot->right->size;
-	pivot->size = l + r + 1;*/
+	pivot->size = l + r + 1;
 }
 
 void RBTree::rotateRight(Node* pivot) {
@@ -135,9 +137,9 @@ void RBTree::rotateRight(Node* pivot) {
 	y->right = pivot;
 	pivot->parent = y;
 
-	/*y->size = pivot->size;
+	y->size = pivot->size;
 	int l = pivot->left->size, r = pivot->right->size;
-	pivot->size = l + r + 1;*/
+	pivot->size = l + r + 1;
 }
 
 void RBTree::fix(Node* pivot) {
@@ -182,26 +184,47 @@ void RBTree::fix(Node* pivot) {
 	root->color = BLACK;
 }
 
-void RBTree::insert(int key) {
-	Node* t = new Node(key);
+void RBTree::insert(student* newS) {
+	nodes++;
+	Node* t = new Node(newS);
 	Node* x = root;
 	Node* y = nil;
 	while (x != nil) {
-		y->size++;
+		x->size++;
 		y = x;
-		if (key < x->value)
-			x = x->left;
-		else
-			x = x->right;
+		if (mode) {
+			if (newS->name < x->value->name) {
+				x = x->left;
+			}
+			else {
+				x = x->right;
+			}
+		}
+		else {
+			if (newS->rating < x->value->rating) {
+				x = x->left;
+			}
+			else {
+				x = x->right;
+			}
+		}
 	}
 	t->parent = y;
 	if (y == nil)
 		root = t;
 	else {
-		if (t->value < y->value)
-			y->left = t;
-		else
-			y->right = t;
+		if (mode) {
+			if (t->value->name < y->value->name)
+				y->left = t;
+			else
+				y->right = t;
+		}
+		else {
+			if (t->value->rating < y->value->rating)
+				y->left = t;
+			else
+				y->right = t;
+		}
 	}
 	t->left = nil;
 	t->right = nil;
@@ -283,6 +306,12 @@ void RBTree::deleteFixup(Node * x) {
 }
 
 void RBTree::remove(Node* element) {
+	std::cout << "HELLO\n\n" << std::endl;
+	Node* temp = element;
+	while (temp != nil) {
+		temp->size--;
+		temp = temp->parent;
+	}
 	Node * x = nil;
 	Node * y = nil;
 	if (element->left == nil || element->right == nil)
@@ -302,17 +331,24 @@ void RBTree::remove(Node* element) {
 		else
 			y->parent->right = x;
 	}
-	if (y != element)
-		element->value = y->value;
+	if (y != element) {
+		if (mode) {
+			element->value->name = y->value->name;
+		}
+		else {
+			element->value->rating = y->value->rating;
+		}
+	}
 	if (y->color == BLACK)
 		deleteFixup(x);
 	delete y;
+	nodes--;
 }
 
-Node* RBTree::search(int key) {
+Node* RBTree::search(std::string key) {
 	Node* x = root;
-	while (x != nil && key != x->value) {
-		if (key < x->value)
+	while (x != nil && key != x->value->name) {
+		if (key < x->value->name)
 			x = x->left;
 		else
 			x = x->right;
@@ -320,30 +356,11 @@ Node* RBTree::search(int key) {
 	return x;
 }
 
-void RBTree::erase(int key) {
+void RBTree::erase(std::string key) {
 	Node* x = search(key);
 	if (x != nil) {
 		remove(x);
 	}
-}
-
-void RBTree::updateSizes(Node* current) {
-	if (!current->left && !current->right) {
-		current->size = 1;
-		return;
-	}
-	
-	int s = 1;
-	if(current->left) {
-		updateSizes(current->left);
-		s += current->left->size;
-	}
-	if (current->right) {
-		updateSizes(current->right);
-		s += current->right->size;
-	}
-
-	current->size = s;
 }
 
 Node* OS_Select(Node* x, int i) {
@@ -367,8 +384,8 @@ int OS_Rank(Node *root, Node *x) {
 }
 
 int main() {
-	RBTree* gradeOriented = new RBTree();
-	RBTree* nameOriented;
+	RBTree* gradeOriented = new RBTree(0);
+	RBTree* nameOriented = new RBTree(1);
 	std::vector<group*> Groups(10);
 	std::vector<student*> Students(100);
 
@@ -376,18 +393,56 @@ int main() {
 	std::string temp, tempCountry, tempCity, tempSpec, tempR;
 	double tempRating;
 
-	gradeOriented->insert(5);
-	gradeOriented->insert(43);
-	gradeOriented->insert(30);
-	gradeOriented->insert(19);
-	gradeOriented->insert(6);
-	gradeOriented->insert(1);
-	gradeOriented->insert(53);
+	for (int i = 0; i < 10; i++) {
+		getline(in, temp);
+		Groups[i] = new group(temp);
+	}
 
-	nodeCheck(gradeOriented->getRoot(), gradeOriented);
+	getline(in, temp);
 
-	std::cout << OS_Select(gradeOriented->getRoot(), 4)->value << std::endl;
+	for (int i = 0; i < 100; i++) {
+		getline(in, temp);
+		getline(in, tempR);
+		getline(in, tempCity);
+		getline(in, tempCountry);
+		getline(in, tempSpec);
+		tempRating = atof(tempR.c_str());
+		Students[i] = new student(temp, tempCountry, tempCity, tempRating, new group(tempSpec));
 
+		gradeOriented->insert(Students[i]);
+		nameOriented->insert(Students[i]);
+
+		for (int j = 0; j < 10; j++) {
+			if (Groups[j]->name == temp) {
+				Groups[j]->groupList.push_back(Students[i]);
+			}
+		}
+		getline(in, temp);
+	}
+
+	/*int option;
+	std::string searchName;
+
+	while (1) {
+		std::cout << "WHATCHA GONNA DO NOW?\n1.Delete Student\n2.Get nth student by rating\n3.Get nth student by name" << std::endl;
+		std::cin >> option;
+		std::cin.ignore();
+		switch (option)
+		{
+		case 1:
+			std::cout << "\nEnter his Name: " << std::endl;
+			std::getline(std::cin, searchName);
+			gradeOriented->erase(searchName);
+			nameOriented->erase(searchName);
+			std::cout << gradeOriented->getNodes() << std::endl;
+			std::cout << nameOriented->getNodes() << std::endl;
+			break;
+		default:
+			continue;
+			break;
+		}
+	}*/
+	
 	system("pause");
 	return 0;
 }
